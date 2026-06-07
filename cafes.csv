@@ -1,6 +1,6 @@
 no,name,location,menu,visited,price,preference,revisit,tags,photo,card_type,review,visit_count,visit_cycle,revisit_reason,menu_price,menu2,menu2_price,menu3,menu3_price,nearby_station,walk_min,naver_map,rec_situation,taste_star,vibe_star,access_star,value_star
 1,라뚜셩트,서초구 방배동,"조각케이크, 빙수",TRUE,5,3,TRUE,디저트,,cake,방배동 골목 깊숙이 숨어있는데 찾아갈 만한 곳,2,비정기,계절 빙수 바뀔 때마다 생각남,8500,빙수,14000,,, 방배역,7분,https://naver.me/example01,데이트|혼카페,4,5,3,3
-2,이미커피,마포구 동교동,"시즌디저트, 페어링 커피",TRUE,5,5,TRUE,커피,,legendary,매번 올 때마다 메뉴가 달라서 매번 새로운 느낌,5,월 1회,시즌 메뉴 보러 꼭 다시 옴,18000,페어링 커피,22000,시즌 케이크,16000,홍대입구역,12분,https://naver.me/example02,데이트|선물,5,5,4,3
+2,이미커피,마포구 동교동,"시즌디저트, 페어링 커피",TRUE,5,5,TRUE,커피,,legendary,매번 올 때마다 메뉴가 달라서 매번 새로운 느낌,5,월 1회,시즌 메뉴 보러 꼭 다시 옴,변동,페어링 커피,변동,월/주간 페어링 디저트,,홍대입구역,12분,https://naver.me/example02,데이트|선물,5,5,4,3
 3,떼헤브,강서구 마곡동,"케이크, 구움과자",TRUE,5,4,TRUE,디저트,,legendary,구움과자 하나하나에 정성이 느껴지는 곳,,,,,,,,,마곡나루역,8분,https://naver.me/example03,선물|데이트,,,, 
 4,얼스어스,종로구 청운동,요거트케이크,FALSE,3,0,,디저트,,cake,청운동 산책길에 꼭 들르고 싶은 요거트케이크 맛집,,,,9500,음료,6000,,,경복궁역,15분,https://naver.me/example04,혼카페|데이트,,,, 
 5,넬리슨,종로구 운니동,멜로케이크,FALSE,2,0,,디저트,,cake,멜로케이크라는 이름부터 설레는 종로 카페,,,,7000,음료,5500,,,안국역,10분,https://naver.me/example05,혼카페|데이트,,,, 
