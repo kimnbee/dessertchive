@@ -1243,7 +1243,7 @@ function cafeDetails(cafe){
     starLine("가성비 별점",cafe.value_star)
   ].filter(Boolean);
   return {
-    location:detailLines(cafe.detail_location)||`${escapeHTML(cafe.nearby_station||cafe.location)}${cafe.walk_min?` · 도보 ${escapeHTML(cafe.walk_min)}`:""}<br><a href="${escapeHTML(naver)}" target="_blank" rel="noreferrer">지도 링크 열기</a><div class="hotspot-map" id="${mapId}"><div class="hotspot-map-fallback">지도 로딩 중</div></div>`,
+    location:detailLines(cafe.detail_location)||`${escapeHTML(cafe.nearby_station||cafe.location)}${cafe.walk_min?` · 도보 ${escapeHTML(cafe.walk_min)}`:""}<br><a href="${escapeHTML(naver)}" target="_blank" rel="noreferrer"></a><div class="hotspot-map" id="${mapId}"><div class="hotspot-map-fallback">지도 로딩 중</div></div>`,
     price:detailLines(cafe.detail_price)||menuDetail,
     visit:detailLines(cafe.detail_visit)||(visitBits.length?visitBits.join("<br>"):`${cafe.visited?"방문 완료":"방문 예정"}`),
     menu:menuDetail,
