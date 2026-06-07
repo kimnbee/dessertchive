@@ -1,0 +1,1541 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>dessertchive</title>
+<script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=0532eeee874e9880e6a67f1664cdded8&libraries=services"></script>
+<style>
+@font-face{font-family:MyFont;src:url("fonts/MyFont-Regular.woff2") format("woff2");font-weight:400}
+@font-face{font-family:MyFont;src:url("fonts/MyFont-Bold.woff2") format("woff2");font-weight:700}
+:root{
+  --bg:#0b0711;
+  --ink:#fff8e9;
+  --muted:rgba(255,248,233,.58);
+  --line:rgba(255,248,233,.15);
+  --pink:#ff5fb8;
+  --gold:#f3d073;
+  --card-w:238px;
+  --card-h:calc(var(--card-w) * 1050 / 720);
+  --stage-w:min(1160px,calc(100vw - 150px));
+  --stage-h:min(650px,calc(100vh - 110px));
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:MyFont,-apple-system,BlinkMacSystemFont,"Noto Sans KR",sans-serif;
+  overflow-x:hidden;
+  cursor:none;
+  user-select:none;
+  -webkit-user-select:none;
+}
+button,a,.cafe-card{cursor:none}
+img{user-select:none;-webkit-user-drag:none}
+button{font:inherit;color:inherit}
+.hero{
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  position:relative;
+  overflow:hidden;
+  background:#050307;
+}
+.hero::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    radial-gradient(ellipse at 50% 31%,rgba(255,95,184,.16) 0%,rgba(255,95,184,.08) 16%,transparent 34%),
+    radial-gradient(ellipse at 59% 31%,rgba(243,208,115,.09) 0%,transparent 30%);
+  opacity:.7;
+  animation:ambient 12s ease-in-out infinite alternate;
+  pointer-events:none;
+}
+@keyframes ambient{to{transform:translate3d(2%,1%,0) scale(1.04)}}
+.hero-inner{
+  width:min(1180px,92vw);
+  position:relative;
+  z-index:1;
+  display:grid;
+  gap:18px;
+  justify-items:center;
+  align-self:center;
+  margin:0 auto 42px;
+}
+.site-title{
+  width:min(760px,82vw);
+  filter:
+    drop-shadow(0 0 8px rgba(255,255,255,.14))
+    drop-shadow(0 0 22px rgba(255,95,184,.30))
+    drop-shadow(0 0 36px rgba(255,95,184,.12));
+}
+.hero-sub{
+  margin:0;
+  color:var(--muted);
+  letter-spacing:2px;
+  font-size:14px;
+}
+.conveyor-wrap{
+  width:100%;
+  position:relative;
+  z-index:2;
+  overflow:hidden;
+  padding:46px 0 48px;
+}
+.conveyor-track{
+  display:flex;
+  gap:22px;
+  width:max-content;
+  animation:conveyor 125s linear infinite;
+  padding:0 18px;
+}
+.conveyor-track:hover{animation-play-state:paused}
+@keyframes conveyor{to{transform:translateX(-50%)}}
+.conveyor-track .cafe-card{
+  position:relative;
+  left:auto;
+  top:auto;
+  flex:0 0 auto;
+  --x:0px;
+  --y:0px;
+  --r:0deg;
+  transform:translate3d(0,0,0);
+  backface-visibility:hidden;
+}
+.conveyor-track .cafe-card:hover{
+  transform:translate3d(0,-16px,0) scale(1.025);
+}
+.conveyor-arrow{
+  position:absolute;
+  top:50%;
+  z-index:5;
+  width:56px;
+  height:56px;
+  border:1px solid rgba(255,95,184,.55);
+  border-radius:999px;
+  background:rgba(15,10,18,.55);
+  color:#fff8dc;
+  font-family:MyBold,system-ui;
+  font-size:34px;
+  line-height:1;
+  display:grid;
+  place-items:center;
+  padding-bottom:4px;
+  box-shadow:0 0 18px rgba(255,95,184,.18);
+  transform:translateY(-50%);
+  cursor:none;
+}
+.conveyor-arrow:hover{background:rgba(255,95,184,.2);box-shadow:0 0 26px rgba(255,95,184,.34)}
+.conveyor-arrow.prev{left:24px}
+.conveyor-arrow.next{right:24px}
+.conveyor-track.reverse{animation-direction:reverse}
+.conveyor-track.fast{animation-duration:40s}
+.conveyor-track.bump{animation-duration:18s}
+.scroll-hint{
+  position:absolute;
+  left:50%;
+  bottom:30px;
+  transform:translateX(-50%);
+  color:rgba(255,248,233,.45);
+  letter-spacing:3px;
+  font-size:12px;
+  animation:float 1.8s ease-in-out infinite;
+}
+.scroll-hint::after{content:" ↓";font-size:16px}
+@keyframes float{50%{transform:translateX(-50%) translateY(8px)}}
+.app{
+  min-height:100vh;
+  display:grid;
+  grid-template-columns:108px 1fr;
+  background:
+    radial-gradient(circle at 80% 18%,color-mix(in srgb,var(--theme,#ff5fb8) 24%,transparent),transparent 28%),
+    linear-gradient(135deg,color-mix(in srgb,var(--theme,#ff5fb8) 17%,#08060b),#08060b 52%,#11120d);
+  transition:background .55s ease;
+}
+.side{
+  min-height:100vh;
+  padding:0;
+  border-right:1px solid var(--line);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:0;
+  position:sticky;
+  top:0;
+}
+.side-title{display:none}
+.cat-list{
+  position:relative;
+  display:grid;
+  gap:36px;
+  padding:28px 0;
+}
+.cat-list::before{
+  content:"";
+  position:absolute;
+  left:50%;
+  top:0;
+  bottom:0;
+  width:1px;
+  background:rgba(255,95,184,.22);
+  transform:translateX(-50%);
+}
+.cat-btn{
+  position:relative;
+  width:24px;
+  height:24px;
+  min-height:0;
+  padding:0;
+  border:0;
+  border-radius:50%;
+  background:transparent;
+  color:var(--pink);
+  text-align:left;
+}
+.cat-btn::before{
+  content:"";
+  position:absolute;
+  inset:4px;
+  border-radius:50%;
+  border:2px solid color-mix(in srgb,var(--cat-color,var(--theme,#ff5fb8)) 58%,transparent);
+  background:#130712;
+  box-shadow:0 0 0 rgba(255,95,184,0);
+  transition:all .18s ease;
+}
+.cat-btn span{
+  position:absolute;
+  left:38px;
+  top:50%;
+  transform:translate(-8px,-50%);
+  min-width:max-content;
+  padding:7px 16px;
+  border-radius:7px;
+  border:1px solid color-mix(in srgb,var(--cat-color,var(--theme,#ff5fb8)) 60%,transparent);
+  background:rgba(13,4,13,.92);
+  color:color-mix(in srgb,var(--cat-color,var(--theme,#ff5fb8)) 80%,white);
+  opacity:0;
+  pointer-events:none;
+  transition:all .18s ease;
+}
+.cat-btn:hover span,.cat-btn.active span{opacity:1;transform:translate(0,-50%)}
+.cat-btn:hover::before,.cat-btn.active::before{
+  inset:0;
+  border-color:color-mix(in srgb,var(--cat-color,var(--theme,#ff5fb8)) 88%,white);
+  background:color-mix(in srgb,var(--cat-color,var(--theme,#ff5fb8)) 80%,white);
+  box-shadow:0 0 18px color-mix(in srgb,var(--cat-color,var(--theme,#ff5fb8)) 80%,transparent);
+}
+.draw-btn{
+  position:fixed;
+  right:32px;
+  bottom:30px;
+  border:0;
+  border-radius:999px;
+  padding:15px 28px;
+  background:var(--pink);
+  box-shadow:0 0 30px rgba(255,95,184,.35);
+  z-index:8000;
+  pointer-events:auto;
+}
+.stage-wrap{
+  min-height:100vh;
+  display:grid;
+  padding:0 clamp(18px,4vw,52px);
+  position:relative;
+}
+.stage-head{display:none}
+.kicker{margin:0 0 7px;color:var(--muted);letter-spacing:2px;font-size:12px}
+h1{margin:0;font-size:clamp(28px,4vw,54px);line-height:1}
+.stage-copy{max-width:410px;margin:0;color:var(--muted);font-size:13px;line-height:1.65;text-align:right}
+.card-stage{
+  --card-w:166px;
+  --card-h:calc(var(--card-w) * 1050 / 720);
+  width:var(--stage-w);
+  height:var(--stage-h);
+  align-self:center;
+  justify-self:center;
+  position:relative;
+  overflow:visible;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  box-shadow:none;
+  touch-action:none;
+}
+.shuffle-btn{
+  position:absolute;
+  left:22px;
+  bottom:34px;
+  z-index:1100;
+  border:1px solid color-mix(in srgb,var(--theme),#fff 18%);
+  border-radius:999px;
+  padding:12px 22px;
+  background:rgba(16,10,18,.62);
+  color:#fff6d7;
+  font-family:MyBold,system-ui;
+  font-size:16px;
+  box-shadow:0 0 20px color-mix(in srgb,var(--theme),transparent 72%);
+  cursor:none;
+}
+.shuffle-btn:hover{background:color-mix(in srgb,var(--theme),transparent 76%)}
+.empty-note{
+  position:absolute;
+  inset:0;
+  display:grid;
+  place-items:center;
+  color:var(--muted);
+  text-align:center;
+  padding:24px;
+}
+.cafe-card{
+  position:absolute;
+  width:var(--card-w);
+  height:var(--card-h);
+  border-radius:14px;
+  transform:translate3d(var(--x,0),var(--y,0),0) rotate(var(--r,0deg));
+  transition:transform .42s cubic-bezier(.2,.9,.22,1),filter .2s ease,opacity .2s ease;
+  transform-style:preserve-3d;
+  will-change:transform;
+  filter:drop-shadow(0 18px 28px rgba(0,0,0,.34));
+}
+.card-stage .cafe-card{
+  animation:cardDrift var(--drift-dur,10s) ease-in-out infinite alternate;
+  animation-delay:var(--drift-delay,0s);
+}
+.card-stage .cafe-card.is-dragging{animation:none}
+@keyframes cardDrift{
+  from{translate:var(--drift-x1,-5px) var(--drift-y1,-4px);rotate:var(--drift-r1,-.3deg)}
+  to{translate:var(--drift-x2,5px) var(--drift-y2,4px);rotate:var(--drift-r2,.3deg)}
+}
+.cafe-card:hover{
+  transform:translate3d(var(--x),calc(var(--y) - 24px),0) rotate(var(--r)) scale(1.045);
+  filter:drop-shadow(0 22px 36px rgba(0,0,0,.40)) drop-shadow(0 0 16px var(--card-glow,color-mix(in srgb,var(--theme,#ff5fb8) 78%,transparent)));
+}
+.cafe-card.is-dragging:hover{
+  transform:translate3d(var(--x),var(--y),0) rotate(var(--r));
+}
+.cafe-card:hover .card-face{outline:2px solid var(--card-glow,color-mix(in srgb,var(--theme,#ff5fb8) 84%,white))}
+.cafe-card.flipping{animation:flipAway .62s ease both}
+@keyframes flipAway{
+  35%{transform:translate3d(var(--x),calc(var(--y) - 90px),0) rotate(var(--r)) rotateY(92deg) scale(1.08)}
+  100%{transform:translate3d(var(--x),calc(var(--y) - 40px),0) rotate(var(--r)) rotateY(180deg) scale(.92);opacity:0}
+}
+.card-face{
+  position:absolute;
+  inset:0;
+  border-radius:14px;
+  overflow:hidden;
+  background:#111;
+  backface-visibility:hidden;
+  container-type:size;
+}
+.card-template,.card-photo{position:absolute;inset:0;width:100%;height:100%}
+.card-template{object-fit:fill;z-index:2;pointer-events:none}
+.card-photo{
+  left:8.9%;
+  top:18.36%;
+  width:82.22%;
+  height:34.84%;
+  object-fit:cover;
+  z-index:1;
+  background:#1a1218;
+}
+.card-photo.fallback{display:grid;place-items:center;color:rgba(255,255,255,.25);font-size:38px}
+.card-text{
+  position:absolute;
+  z-index:3;
+  color:#fceda4;
+  font-family:MyFont,"Noto Sans KR",sans-serif;
+  font-weight:400;
+  text-align:center;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  line-height:1.18;
+  overflow:hidden;
+  text-shadow:0 1px 4px rgba(0,0,0,.35);
+}
+.t-no{left:34%;top:5.15%;width:32%;height:2.1%;font-size:2.85cqw;letter-spacing:.04em;white-space:nowrap}
+.t-name{left:8%;top:10.4%;width:84%;height:6.2%;font-size:var(--name-size,7.25cqw);font-family:MyFont,"Noto Sans KR",sans-serif;font-weight:700;white-space:nowrap}
+.t-name:hover{
+  text-shadow:0 0 8px #fff5b7,0 0 18px var(--card-glow,color-mix(in srgb,var(--theme,#ff5fb8) 78%,white));
+  filter:drop-shadow(0 0 12px var(--card-glow,color-mix(in srgb,var(--theme,#ff5fb8) 70%,transparent)));
+}
+.t-loc{left:8.5%;top:59.15%;width:27.5%;height:5.7%;font-size:3.35cqw;font-weight:400;line-height:1.05}
+.t-price{left:36.8%;top:59.15%;width:26%;height:5.7%;font-size:3.35cqw;font-weight:400;line-height:1.05}
+.t-state{left:64.5%;top:59.15%;width:27.5%;height:5.7%;font-size:3.35cqw;font-weight:400;line-height:1.05}
+.t-menu{left:8.5%;top:70.9%;width:41.2%;height:5.6%;font-size:3.2cqw;font-weight:400;line-height:1.08}
+.t-stars{left:51%;top:70.9%;width:41.5%;height:5.6%;font-size:4.45cqw;font-weight:400;letter-spacing:.015em;line-height:1}
+.t-review{left:12%;top:80.65%;width:76%;height:6.7%;font-size:2.75cqw;font-style:italic;font-weight:400;opacity:1;line-height:1.24;white-space:normal}
+.starter-label{
+  position:absolute;
+  left:50%;
+  top:50%;
+  z-index:4;
+  transform:translate(-50%,-50%);
+  color:#fceda4;
+  font-size:28px;
+  letter-spacing:.04em;
+  text-shadow:0 0 18px rgba(255,95,184,.8);
+}
+.card-back{
+  position:absolute;
+  inset:0;
+  border-radius:14px;
+  background:url("card-back.png") center/cover;
+  transform:rotateY(180deg);
+  backface-visibility:hidden;
+}
+.cafe-card.is-back .card-face{transform:rotateY(180deg)}
+.cafe-card.is-back .card-back{transform:rotateY(0)}
+.overlay{
+  position:fixed;
+  inset:0;
+  z-index:5000;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  background:rgba(5,3,7,.84);
+  backdrop-filter:blur(16px);
+}
+.overlay.open{display:flex}
+.zoom-shell{
+  width:min(980px,92vw);
+  min-height:min(720px,90vh);
+  display:grid;
+  place-items:center;
+  transform:translateY(-22px);
+}
+.zoom-card{
+  --card-w:min(440px,72vw);
+  --card-h:calc(var(--card-w) * 1050 / 720);
+  width:var(--card-w);
+  aspect-ratio:720/1050;
+  position:relative;
+  perspective:1000px;
+}
+.zoom-card .cafe-card{
+  position:absolute;
+  left:50%;
+  top:50%;
+  --x:-50%;
+  --y:-50%;
+  width:100%;
+  height:100%;
+  transform:translate3d(-50%,-50%,0);
+  filter:drop-shadow(0 30px 70px rgba(0,0,0,.55));
+}
+.zoom-hotspots{position:absolute;inset:0;z-index:8;pointer-events:none}
+.hotspot{position:absolute;pointer-events:auto;border-radius:8px}
+.hotspot::before{
+  display:none;
+}
+.hotspot::after{
+  content:"";
+  position:absolute;
+  left:100%;
+  top:50%;
+  width:44px;
+  height:1px;
+  background:color-mix(in srgb,var(--theme,#ff5fb8) 78%,white);
+  box-shadow:0 0 8px color-mix(in srgb,var(--theme,#ff5fb8) 70%,transparent);
+  opacity:0;
+  transform:translateY(-50%);
+  pointer-events:none;
+  transition:opacity .18s ease;
+}
+.hotspot:hover::after{opacity:1}
+.hotspot-tip{
+  position:absolute;
+  left:calc(100% + 44px);
+  top:50%;
+  transform:translateY(-50%) translateX(-8px);
+  width:230px;
+  padding:13px 15px;
+  border-radius:8px;
+  border:1px solid color-mix(in srgb,var(--theme,#ff5fb8) 68%,white);
+  background:color-mix(in srgb,#09040a 88%,var(--theme,#ff5fb8));
+  color:rgba(255,248,233,.88);
+  font-size:13px;
+  line-height:1.55;
+  opacity:0;
+  transition:all .18s ease;
+  box-shadow:0 0 28px rgba(0,0,0,.46),0 0 18px color-mix(in srgb,var(--theme,#ff5fb8) 34%,transparent),0 0 44px color-mix(in srgb,var(--theme,#ff5fb8) 18%,transparent);
+}
+.hotspot-map{
+  width:100%;
+  height:124px;
+  margin-top:9px;
+  border-radius:6px;
+  border:1px solid color-mix(in srgb,var(--theme,#ff5fb8) 58%,transparent);
+  overflow:hidden;
+  background:rgba(255,255,255,.08);
+}
+.hotspot-map-fallback{
+  display:grid;
+  place-items:center;
+  height:100%;
+  color:rgba(255,248,233,.62);
+  font-size:12px;
+  text-align:center;
+  padding:10px;
+}
+.minimap-popup{
+  position:fixed;
+  display:none;
+  width:220px;
+  height:160px;
+  z-index:9000;
+  border:1.5px solid rgba(255,77,166,.5);
+  border-radius:10px;
+  overflow:hidden;
+  background:rgba(9,4,11,.94);
+  box-shadow:0 18px 42px rgba(0,0,0,.48),0 0 24px rgba(255,77,166,.22);
+  pointer-events:auto;
+}
+.minimap-popup.show{display:block}
+.minimap-label{
+  position:absolute;
+  left:8px;
+  top:8px;
+  z-index:2;
+  max-width:132px;
+  padding:4px 7px;
+  border-radius:6px;
+  background:rgba(5,3,7,.78);
+  color:#fff8e9;
+  font-size:11px;
+  line-height:1.2;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.minimap-open-btn{
+  position:absolute;
+  right:8px;
+  bottom:8px;
+  z-index:2;
+  border:1px solid rgba(255,248,233,.28);
+  border-radius:999px;
+  padding:5px 9px;
+  background:rgba(255,77,166,.86);
+  color:#fff;
+  font-size:11px;
+  box-shadow:0 0 16px rgba(255,77,166,.32);
+  cursor:none;
+}
+.minimap-fallback{
+  display:grid;
+  place-items:center;
+  width:100%;
+  height:100%;
+  color:rgba(255,248,233,.7);
+  font-size:12px;
+  text-align:center;
+  padding:12px;
+}
+.hotspot-tip::before{
+  display:none;
+}
+.hotspot:hover .hotspot-tip{opacity:1;transform:translateY(-50%) translateX(0)}
+.hotspot-tip b{display:block;color:var(--gold);margin-bottom:5px}
+.hotspot-tip a{color:#fff;text-decoration:none;border-bottom:1px solid color-mix(in srgb,var(--theme,#ff5fb8) 80%,white)}
+.hotspot.menu .hotspot-tip,.hotspot.review .hotspot-tip{left:auto;right:calc(100% + 44px)}
+.hotspot.menu::after,.hotspot.review::after{
+  left:auto;
+  right:100%;
+}
+.hotspot.loc .hotspot-tip{left:auto;right:calc(100% + 44px)}
+.hotspot.loc::after{
+  left:auto;
+  right:100%;
+}
+.close{
+  position:fixed;
+  right:24px;
+  top:24px;
+  z-index:60;
+  width:44px;
+  height:44px;
+  border-radius:50%;
+  border:1px solid rgba(255,255,255,.16);
+  background:rgba(255,255,255,.06);
+}
+.draw-panel{
+  width:min(1220px,96vw);
+  min-height:min(760px,94vh);
+  display:grid;
+  grid-template-rows:auto auto 1fr auto;
+  align-content:center;
+  gap:26px;
+  position:relative;
+}
+.draw-panel h2{margin:0;text-align:center;font-size:38px}
+.draw-selected{
+  display:none;
+  justify-self:center;
+  padding:6px 16px;
+  border-radius:999px;
+  border:1px solid color-mix(in srgb,var(--theme,#ff5fb8) 62%,white);
+  color:color-mix(in srgb,var(--theme,#ff5fb8) 78%,white);
+  background:color-mix(in srgb,var(--theme,#ff5fb8) 12%,transparent);
+  font-size:15px;
+}
+.draw-cats{display:grid;grid-template-columns:repeat(2,minmax(170px,230px));gap:14px;justify-content:center;align-content:center}
+.draw-panel.choosing{
+  grid-template-rows:auto auto auto;
+}
+.draw-panel.choosing .draw-cats{
+  margin:18px 0;
+}
+.draw-panel.choosing .draw-stage{display:none}
+.draw-panel:not(.choosing) .draw-cats{display:none}
+.draw-panel:not(.choosing) .draw-selected{display:block}
+.draw-cat{
+  min-height:62px;
+  border:1px solid color-mix(in srgb,var(--draw-cat-color,var(--theme,#ff5fb8)) 50%,rgba(255,255,255,.18));
+  background:color-mix(in srgb,var(--draw-cat-color,var(--theme,#ff5fb8)) 12%,rgba(255,255,255,.04));
+  border-radius:10px;
+  padding:14px 18px;
+  font-size:20px;
+  box-shadow:0 0 22px color-mix(in srgb,var(--draw-cat-color,var(--theme,#ff5fb8)) 18%,transparent);
+}
+.draw-cat:hover,.draw-cat.active{background:var(--draw-cat-color,var(--theme,#ff5fb8));border-color:transparent}
+.draw-stage{
+  position:relative;
+  min-height:520px;
+  overflow:visible;
+  --card-w:142px;
+  --card-h:calc(var(--card-w) * 1050 / 720);
+}
+.draw-stage .cafe-card{top:50%;left:50%;transform-origin:bottom center}
+.draw-stage .cafe-card:hover{filter:drop-shadow(0 0 28px color-mix(in srgb,var(--theme,#ff5fb8) 80%,transparent))}
+.draw-hint{display:none}
+.trail{
+  position:fixed;
+  width:10px;
+  height:10px;
+  pointer-events:none;
+  border-radius:50%;
+  z-index:99998;
+  background:radial-gradient(circle,#fff 0 18%,var(--pink) 20% 45%,transparent 70%);
+  animation:sparkle .72s ease-out forwards;
+}
+@keyframes sparkle{
+  to{transform:translate(var(--dx),var(--dy)) scale(.15) rotate(90deg);opacity:0}
+}
+#customCursor{
+  position:fixed;
+  left:0;
+  top:0;
+  width:78px;
+  height:116px;
+  z-index:99999;
+  pointer-events:none;
+  transform:translate3d(-12px,-9px,0) rotate(-30deg);
+  transform-origin:14px 10px;
+  will-change:transform,left,top;
+}
+#customCursor img{width:100%;height:100%;object-fit:contain}
+body.down #customCursor{transform:translate3d(-12px,-9px,0) rotate(-20deg) scale(.94)}
+@media(max-width:860px){
+  :root{--card-w:170px;--card-h:calc(var(--card-w) * 1050 / 720);--stage-w:calc(100vw - 28px);--stage-h:62vh}
+  .app{grid-template-columns:1fr}
+  .side{position:relative;min-height:auto;padding:18px;flex-direction:row;overflow:auto;border-right:0;border-bottom:1px solid var(--line)}
+  .cat-list{grid-auto-flow:column;grid-auto-columns:max-content}
+  .draw-btn{margin:0;white-space:nowrap}
+  .stage-wrap{padding:20px 14px}
+  .stage-head{display:block}
+  .stage-copy{text-align:left;margin-top:10px}
+  .zoom-shell{grid-template-columns:1fr;gap:14px;padding:60px 0 24px}
+  .zoom-card{justify-self:center;width:min(320px,78vw)}
+  .zoom-info{border-left:0;padding-left:0}
+  .info-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<section class="hero" id="home">
+  <div class="hero-inner">
+    <img class="site-title" src="logo-title.png" alt="dessertchive" />
+    <p class="hero-sub">my personal dessert cafe archive</p>
+  </div>
+  <div class="conveyor-wrap">
+    <button class="conveyor-arrow prev" id="convPrev" aria-label="이전 카드">‹</button>
+    <div class="conveyor-track" id="conveyorTrack"></div>
+    <button class="conveyor-arrow next" id="convNext" aria-label="다음 카드">›</button>
+  </div>
+  <div class="scroll-hint">SCROLL</div>
+</section>
+
+<main class="app" id="app">
+  <aside class="side">
+    <p class="side-title">CATEGORY</p>
+    <div class="cat-list" id="catList"></div>
+  </aside>
+  <section class="stage-wrap">
+    <div class="stage-head">
+      <div>
+        <p class="kicker" id="stageKicker">카테고리를 골라주세요</p>
+        <h1 id="stageTitle">stacked deck</h1>
+      </div>
+      <p class="stage-copy" id="stageCopy">처음에는 아무 카테고리도 선택되지 않은 카드 더미만 보여요. 왼쪽 카테고리를 누르면 카드가 섞이며 펼쳐집니다.</p>
+    </div>
+    <div class="card-stage" id="cardStage"></div>
+    <button class="shuffle-btn" id="shuffleCards">다시 섞기</button>
+  </section>
+</main>
+<button class="draw-btn" id="openDraw">오늘의 카페 뽑기</button>
+
+<div class="overlay" id="zoomOverlay">
+  <button class="close" id="zoomClose">X</button>
+  <div class="zoom-shell" id="zoomShell"></div>
+</div>
+
+<div class="overlay" id="drawOverlay">
+  <button class="close" id="drawClose">X</button>
+  <div class="draw-panel">
+    <h2>어떤 카페를 골라볼까요?</h2>
+    <div class="draw-selected" id="drawSelected"></div>
+    <div class="draw-cats" id="drawCats"></div>
+    <div class="draw-stage" id="drawStage"></div>
+    <div class="draw-hint" id="drawHint">먼저 카테고리를 선택해주세요</div>
+  </div>
+</div>
+
+<div id="customCursor"><img src="Cursor-fork.png" alt="" /></div>
+<div class="minimap-popup" id="minimapPopup">
+  <div id="minimapInner" style="width:100%;height:100%"></div>
+  <div class="minimap-label" id="minimapLabel"></div>
+  <button class="minimap-open-btn" id="minimapOpenBtn">지도 열기 →</button>
+</div>
+
+<script type="text/plain" id="csvFallback">no,name,location,menu,visited,price,preference,revisit,tags,photo,card_type,review,visit_count,visit_cycle,revisit_reason,menu_price,menu2,menu2_price,menu3,menu3_price,nearby_station,walk_min,naver_map,rec_situation,taste_star,vibe_star,access_star,value_star
+1,라뚜셩트,서초구 방배동,"조각케이크, 빙수",TRUE,5,3,TRUE,디저트,,cake,방배동 골목 깊숙이 숨어있는데 찾아갈 만한 곳,2,비정기,계절 빙수 바뀔 때마다 생각남,8500,빙수,14000,,, 방배역,7분,https://naver.me/example01,데이트|혼카페,4,5,3,3
+2,이미커피,마포구 동교동,"시즌디저트, 페어링 커피",TRUE,5,5,TRUE,커피,,legendary,매번 올 때마다 메뉴가 달라서 매번 새로운 느낌,5,월 1회,시즌 메뉴 보러 꼭 다시 옴,18000,페어링 커피,22000,시즌 케이크,16000,홍대입구역,12분,https://naver.me/example02,데이트|선물,5,5,4,3
+3,떼헤브,강서구 마곡동,"케이크, 구움과자",TRUE,5,4,TRUE,디저트,,legendary,구움과자 하나하나에 정성이 느껴지는 곳,,,,,,,,,마곡나루역,8분,https://naver.me/example03,선물|데이트,,,, 
+4,얼스어스,종로구 청운동,요거트케이크,FALSE,3,0,,디저트,,cake,청운동 산책길에 꼭 들르고 싶은 요거트케이크 맛집,,,,9500,음료,6000,,,경복궁역,15분,https://naver.me/example04,혼카페|데이트,,,, 
+5,넬리슨,종로구 운니동,멜로케이크,FALSE,2,0,,디저트,,cake,멜로케이크라는 이름부터 설레는 종로 카페,,,,7000,음료,5500,,,안국역,10분,https://naver.me/example05,혼카페|데이트,,,, 
+6,인라이크,강서구 마곡동,조각케이크,FALSE,3,0,,디저트,,cake,마곡에 이런 케이크 카페가 있다니 빨리 가봐야 해,,,,9000,음료,6000,,,마곡나루역,5분,https://naver.me/example06,혼카페|데이트,,,, 
+7,포포민즈낫띵,서초구 방배동,"쁘띠갸또, 구움과자",FALSE,3,0,,디저트,포포민즈낫띵.png,baked,이름도 귀엽고 메뉴도 귀여운 방배동 구움과자 카페,,,,11000,구움과자,8000,,,방배역,5분,https://naver.me/example07,선물|데이트,,,, 
+8,여기인가,종로구 통인동,"에이드, 티",FALSE,2,0,,음료,,other,통인동 골목 어딘가에서 조용히 차 한 잔,,,,6500,티,7000,,,경복궁역,12분,https://naver.me/example08,혼카페|작업,,,, 
+9,프레베리,강서구 마곡동,과일 생크림 케이크,FALSE,3,0,,디저트,,cake,계절 과일이 올라간 생크림 케이크가 궁금한 곳,,,,10000,음료,6000,,,마곡나루역,6분,https://naver.me/example09,데이트|선물,,,, 
+10,일련 로스터스,마포구 연남동,"커피, 파운드 케이크",FALSE,4,0,,"디저트,커피",,cake,연남동에서 커피 진지하게 마시고 싶을 때,,,,7000,파운드 케이크,6500,,,홍대입구역,10분,https://naver.me/example10,작업|혼카페,,,, 
+11,턴다운서비스,마포구 연남동,"아이스크림, 커피, 타르트",FALSE,3,0,,"디저트,커피",,coffee,이름처럼 하루 마무리에 딱 어울릴 것 같은 카페,,,,8000,타르트,7500,,,홍대입구역,12분,https://naver.me/example11,데이트|혼카페,,,, 
+12,치플레,마포구 연남동,수플레 치즈케이크,TRUE,4,4,TRUE,디저트,,legendary,수플레 치즈케이크가 테이블에 오는 순간 사진부터 찍게 됨,2,비정기,수플레가 너무 맛있어서 또 오고 싶음,13000,음료,7000,,,홍대입구역,15분,https://naver.me/example12,데이트|선물,5,4,3,4
+13,브라운하우스연남,마포구 연남동,"커피, 치즈케이크",TRUE,4,3,TRUE,"디저트,커피",,cake,연남동에서 오래 앉아 있고 싶을 때 생각나는 곳,3,월 1회,오래 앉기 좋고 커피가 맛있음,8000,치즈케이크,9000,,,홍대입구역,13분,https://naver.me/example13,작업|혼카페,4,4,4,4
+14,아도티하우스,영등포구 문래동,티,FALSE,4,0,,음료,,other,문래 산업단지 분위기와 티 향이 묘하게 어울릴 것 같은 카페,,,,10000,티 세트,18000,,,문래역,7분,https://naver.me/example14,데이트|혼카페,,,, 
+15,문래 마이스페이스,영등포구 문래동,"구움과자, 케이크",FALSE,3,0,,디저트,,cake,문래 감성에 구움과자라니 분위기 맛집일 것 같아,,,,9000,음료,6000,,,문래역,8분,https://naver.me/example15,혼카페|데이트,,,, 
+16,하태제과,영등포구 당산동,"두쫀쿠, 크림브륄레",FALSE,2,0,,디저트,하태제과.jpeg,baked,두쫀쿠가 뭔지 몰라도 일단 먹어보고 싶음,,,,7000,크림브륄레,8000,,,당산역,8분,https://naver.me/example16,혼카페|데이트,,,, 
+17,포엣룸,영등포구 문래동,"커피, 디저트",FALSE,3,0,,커피,,coffee,시 읽으면서 커피 마시기 딱 좋을 이름의 카페,,,,6500,디저트,7000,,,문래역,5분,https://naver.me/example17,작업|혼카페,,,, 
+18,스마스커피,영등포구 문래동,"커피, 디저트, 베이글",FALSE,3,0,,"커피,베이커리",,coffee,베이글에 커피까지 문래 작업하기 좋은 카페,,,,6000,베이글,4500,,,문래역,6분,https://naver.me/example18,작업|혼카페,,,, 
+19,슬롯 문래,영등포구 문래동,프렌치 토스트,FALSE,4,0,,베이커리,,other,문래 철공소 골목에서 먹는 프렌치 토스트라니 궁금해,,,,12000,음료,7000,,,문래역,9분,https://naver.me/example19,데이트|혼카페,,,, 
+20,노버든,영등포구 당산동,"라떼, 치즈케이크",FALSE,3,0,,"디저트,음료",,cake,부담 없이 라떼 한 잔 마시기 좋을 것 같은 동네 카페,,,,7500,치즈케이크,8000,,,당산역,6분,https://naver.me/example20,혼카페|작업,,,, 
+21,부클레,용산구 한강로동,"커피, 케이크",FALSE,3,0,,"디저트,커피",,cake,용산 한강 근처에서 케이크 한 조각 먹고 싶다면,,,,8500,음료,6500,,,삼각지역,10분,https://naver.me/example21,데이트|혼카페,,,, 
+22,레뽀드라라 용산본점,용산구 한강로동,"스콘, 에그타르트",FALSE,2,0,,"디저트,베이커리",,baked,이름이 발음하기 어렵지만 스콘은 맛있을 것 같음,,,,7000,에그타르트,4500,,,삼각지역,8분,https://naver.me/example22,혼카페|작업,,,, 
+23,파이인더샵 용산점,용산구 한강로동,"케이크, 파이",FALSE,4,0,,디저트,,cake,파이 전문 카페라는 것 자체가 이미 가야 하는 이유,,,,11000,파이,9000,,,삼각지역,7분,https://naver.me/example23,데이트|선물,,,, 
+24,더닝 용산,용산구 한강로동,과일 생크림 케이크,FALSE,5,0,,디저트,,cake,비주얼부터 화려할 것 같은 용산의 과일 케이크 맛집,,,,15000,음료,7000,,,삼각지역,9분,https://naver.me/example24,데이트|선물,,,, 
+25,피롤츠 커피하우스 용산점,용산구 한강로동,"커피, 티, 푸딩",FALSE,4,0,,"디저트,커피,음료",,coffee,커피도 티도 푸딩도 다 된다니 선택지가 너무 많아서 좋아,,,,8000,푸딩,6000,,,삼각지역,5분,https://naver.me/example25,혼카페|작업,,,, 
+26,레프커피,강서구 마곡동,"커피, 말렌카 케이크",TRUE,3,4,TRUE,"디저트,커피",,legendary,말렌카 케이크는 다른 곳에서 쉽게 못 보는 특별한 메뉴,2,비정기,말렌카 케이크 때문에 다시 옴,9000,말렌카 케이크,12000,,,마곡나루역,4분,https://naver.me/example26,혼카페|작업,4,3,5,5
+27,카페인풀 마곡나루,강서구 마곡동,"커피, 에그타르트",FALSE,2,0,,"디저트,커피",,coffee,출근길 마곡나루 역 근처에서 가볍게 한 잔 하기 좋을 것 같아,,,,5500,에그타르트,3500,,,마곡나루역,2분,https://naver.me/example27,혼카페|작업,,,, 
+28,소복소복,강서구 마곡동,빙수,TRUE,4,3,TRUE,디저트,,other,여름에 빙수 생각날 때 제일 먼저 떠오르는 곳,4,여름마다,여름 시즌 한정 빙수가 너무 맛있음,13000,팥빙수,11000,,,마곡나루역,6분,https://naver.me/example28,데이트|혼카페,3,4,4,4
+29,타르데마 베이커리 마곡나루,강서구 마곡동,베이커리,FALSE,3,0,,베이커리,,bakery,마곡 출퇴근길에 사 가기 딱 좋을 것 같은 베이커리,,,,5000,크루아상,4000,,,마곡나루역,3분,https://naver.me/example29,혼카페|작업,,,, 
+30,코히야,강서구 마곡동,"커피, 메론빵",TRUE,2,3,FALSE,"커피,베이커리",,coffee,메론빵은 맛있었는데 전체적으로 기대보다는 아쉬웠음,1,재방문 안함,분위기가 기대와 달랐음,5500,메론빵,3500,,,마곡나루역,5분,https://naver.me/example30,혼카페,3,2,4,4
+31,카페드크래프트 마곡나루점,강서구 마곡동,베이커리,FALSE,3,0,,베이커리,,bakery,크래프트라는 이름처럼 정성 들인 베이커리일 것 같아,,,,6000,음료,5500,,,마곡나루역,4분,https://naver.me/example31,혼카페|작업,,,, 
+32,코모레비,강서구 마곡동,"커피, 티라미수",FALSE,3,0,,"커피,음료",,coffee,코모레비 뜻처럼 햇살 드는 창가에서 티라미수 먹고 싶다,,,,7000,티라미수,8500,,,마곡나루역,7분,https://naver.me/example32,혼카페|데이트,,,, 
+33,라크레마,강서구 마곡동,"젤라또, 베이커리",FALSE,3,0,,"디저트,베이커리",,bakery,여름 한 철 마곡에서 젤라또로 더위 날릴 수 있는 곳,,,,6000,젤라또 2스쿱,8000,,,마곡나루역,5분,https://naver.me/example33,혼카페|데이트,,,, 
+34,베니르,강서구 마곡동,글루텐프리 디저트,FALSE,3,0,,"케이크, 음료",,cake,글루텐프리인데 맛있다면 진짜 대단한 곳,,,,10000,음료,6500,,,마곡나루역,6분,https://naver.me/example34,혼카페|데이트,,,, 
+35,마곡 카페 디프커피,강서구 마곡동,"커피, 푸딩, 디저트",FALSE,3,0,,"디저트,커피",,coffee,커피에 푸딩까지 마곡 디저트 카페 중 숨은 보석일 것 같아,,,,6500,푸딩,5000,,,마곡나루역,5분,https://naver.me/example35,혼카페|작업,,,, 
+36,베이글리스트,강서구 마곡동,베이글,TRUE,3,2,TRUE,베이커리,,bakery,베이글 종류가 다양한 건 좋았는데 취향 저격은 아니었음,1,비정기,베이글 종류가 다양한 건 좋았음,4500,크림치즈 베이글,5500,,,마곡나루역,4분,https://naver.me/example36,혼카페|작업,3,3,5,4
+37,피에르떼,강서구 마곡동,"쁘띠갸또, 케이크",FALSE,4,0,,디저트,,cake,쁘띠갸또 전문점이라니 선물 사러 꼭 한번 가봐야겠어,,,,13000,케이크,11000,,,마곡나루역,5분,https://naver.me/example37,데이트|선물,,,, 
+38,카페가토,강서구 마곡동,"커피, 케이크",TRUE,4,3,TRUE,"디저트,커피",,cake,케이크 비주얼이 예뻐서 사진 찍고 싶어지는 곳,2,비정기,케이크 비주얼이 예쁘고 커피도 괜찮음,9500,케이크,11000,,,마곡나루역,6분,https://naver.me/example38,데이트|혼카페,4,4,5,3
+39,나따오비까 마곡점,강서구 마곡동,타르트,FALSE,2,0,,디저트,,baked,나따오비까라는 이름이 귀여운 타르트 전문점,,,,7000,음료,5500,,,마곡나루역,5분,https://naver.me/example39,혼카페|데이트,,,, 
+40,레어레빗,강서구 화곡동,"음료, 디저트",FALSE,4,0,,음료,,other,토끼 컨셉이라니 인테리어부터 보고 싶어지는 카페,,,,8000,디저트,9000,,,화곡역,10분,https://naver.me/example40,데이트|혼카페,,,,</script>
+
+<script>
+const CARD_IMAGES={cake:"card-cake.png",coffee:"card-coffee.png",bakery:"card-bakery.png",baked:"card-baked.png",other:"card-other.png",legendary:"card-legendary.png"};
+const CARD_GLOWS={cake:"#ff5fb8",coffee:"#55d36a",bakery:"#f0c96f",baked:"#ffb35c",other:"#5db9ff",legendary:"#d46bff"};
+const THEMES={none:"#ff5fb8",all:"#ff5fb8",visited:"#73c8a9",wish:"#b58cff",cake:"#ff5fb8",bakery:"#f0c96f",baked:"#ffb35c",coffee:"#55d36a",other:"#5db9ff",legendary:"#d46bff"};
+const state={cafes:[],category:null,cards:[],dragging:false,dragCard:null,dragOffsetX:0,dragOffsetY:0,lastMove:0,hoverTimer:null,hoverCard:null,drawCards:[],drawCategory:null};
+const categories=[
+  {key:"all",label:"전체",filter:c=>true,theme:THEMES.all},
+  {key:"visited",label:"방문 완료",filter:c=>c.visited,theme:THEMES.visited},
+  {key:"wish",label:"위시",filter:c=>!c.visited,theme:THEMES.wish},
+  {key:"cake",label:"케이크",filter:c=>c.base_type==="cake",theme:THEMES.cake},
+  {key:"bakery",label:"베이커리",filter:c=>c.base_type==="bakery",theme:THEMES.bakery},
+  {key:"baked",label:"구움과자",filter:c=>c.base_type==="baked",theme:THEMES.baked},
+  {key:"coffee",label:"커피",filter:c=>c.base_type==="coffee",theme:THEMES.coffee},
+  {key:"other",label:"기타메뉴",filter:c=>c.base_type==="other",theme:THEMES.other},
+  {key:"legendary",label:"최애 카페",filter:c=>c.card_type==="legendary",theme:THEMES.legendary}
+];
+const $=id=>document.getElementById(id);
+if("scrollRestoration" in history)history.scrollRestoration="manual";
+
+function parseCSV(text){
+  const rows=[];
+  let row=[],cell="",q=false;
+  for(let i=0;i<text.length;i++){
+    const ch=text[i],next=text[i+1];
+    if(ch==='"'&&q&&next==='"'){cell+='"';i++}
+    else if(ch==='"'){q=!q}
+    else if(ch===","&&!q){row.push(cell);cell=""}
+    else if((ch==="\n"||ch==="\r")&&!q){if(cell||row.length){row.push(cell);rows.push(row);row=[];cell=""}}
+    else cell+=ch;
+  }
+  if(cell||row.length){row.push(cell);rows.push(row)}
+  const headers=rows.shift().map(h=>h.trim());
+  return rows.filter(r=>r.length>2).map(r=>{
+    const o={};
+    headers.forEach((h,i)=>o[h]=(r[i]||"").trim());
+    o.visited=(o.visited||"").toLowerCase()==="true";
+    o.revisit=(o.revisit||"").toLowerCase()==="true"?true:(o.revisit||"").toLowerCase()==="false"?false:null;
+    o.price=Number(o.price)||0;
+    o.preference=Number(o.preference)||0;
+    o.base_type=(o.card_type||"other").trim()||"other";
+    o.card_type=o.base_type;
+    if(o.preference>=4)o.card_type="legendary";
+    o.tags=o.tags?o.tags.replace(/^"|"$/g,"").split(",").map(t=>t.trim()).filter(Boolean):[];
+    if(!o.tags.length&&o.menu)o.tags=inferTags(o.menu);
+    o.menuItems=menuItems(o);
+    return o;
+  });
+}
+function inferTags(menu){
+  const tags=[];
+  if(/커피|라떼|로스터/.test(menu))tags.push("커피");
+  if(/베이커리|베이글|스콘|타르트|구움|빵/.test(menu))tags.push("베이커리");
+  if(/티|에이드|음료/.test(menu))tags.push("음료");
+  if(/케이크|디저트|빙수|푸딩|젤라또|쁘띠/.test(menu))tags.push("디저트");
+  return tags.length?tags:["디저트"];
+}
+function menuItems(cafe){
+  const base=(cafe.menu||"디저트").split(",").map(v=>v.trim()).filter(Boolean);
+  const extras={
+    coffee:["필터 커피","시그니처 라떼"],cake:["시즌 케이크","아메리카노"],baked:["휘낭시에","아메리카노"],bakery:["소금빵","아메리카노"],other:["시그니처 음료","디저트"],legendary:["시즌 디저트","페어링 커피"]
+  }[cafe.card_type]||["시그니처 메뉴"];
+  const names=[...base,...extras].slice(0,4);
+  const start=4200+(cafe.price*900);
+  return names.map((name,i)=>({name,price:(start+i*1300).toLocaleString("ko-KR")+"원"}));
+}
+function photoCandidates(cafe){
+  const raw=(cafe.photo||"").trim();
+  const name=cafe.name.replace(/\s+/g,"");
+  const arr=[];
+  if(raw){
+    arr.push(`photos/${raw}`);
+    arr.push(`photos/${raw.normalize("NFC")}`);
+    arr.push(`photos/${raw.normalize("NFD")}`);
+  }
+  [".jpeg",".jpg",".png"].forEach(ext=>{
+    arr.push(`photos/${name}${ext}`);
+    arr.push(`photos/${name.normalize("NFC")}${ext}`);
+    arr.push(`photos/${name.normalize("NFD")}${ext}`);
+  });
+  const aliases={
+    "일련로스터스":"일련로스터즈",
+    "일련로스터즈":"일련로스터스",
+    "브라운하우스":"브라운하우스연남",
+    "브라운하우스연남":"브라운하우스",
+  };
+  const alias=aliases[name];
+  if(alias)[".jpeg",".jpg",".png"].forEach(ext=>{
+    arr.push(`photos/${alias}${ext}`);
+    arr.push(`photos/${alias.normalize("NFC")}${ext}`);
+    arr.push(`photos/${alias.normalize("NFD")}${ext}`);
+  });
+  return [...new Set(arr)];
+}
+function cardImage(type){return CARD_IMAGES[type]||CARD_IMAGES.other}
+function escapeHTML(v){return String(v||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]))}
+function makeCard(cafe,{back=false,interactive=true}={}){
+  const el=document.createElement("div");
+  el.className=`cafe-card${back?" is-back":""}`;
+  el.dataset.no=cafe.no;
+  el.style.setProperty("--card-glow",CARD_GLOWS[cafe.card_type]||CARD_GLOWS.other);
+  const compactName=cafe.name.length>14?"4.95cqw":cafe.name.length>10?"5.65cqw":cafe.name.length>7?"6.35cqw":"7.25cqw";
+  el.style.setProperty("--name-size",compactName);
+  const candidates=photoCandidates(cafe);
+  const rating=cafe.preference>0?"★".repeat(cafe.preference)+"☆".repeat(Math.max(0,5-cafe.preference)):"☆☆☆☆☆";
+  el.innerHTML=`
+    <div class="card-face">
+      <img class="card-photo" alt="${escapeHTML(cafe.name)}" />
+      <img class="card-template" src="${cardImage(cafe.card_type)}" alt="" />
+      <div class="card-text t-no">${escapeHTML((cafe.card_type||"").toUpperCase())} NO.${escapeHTML(String(cafe.no).padStart(3,"0"))}</div>
+      <div class="card-text t-name" data-cafe-link-no="${escapeHTML(cafe.no)}">${escapeHTML(cafe.name)}</div>
+      <div class="card-text t-loc" data-cafe-no="${escapeHTML(cafe.no)}">${escapeHTML(cafe.location)}</div>
+      <div class="card-text t-price">${"₩".repeat(cafe.price)}<span style="opacity:.28">${"₩".repeat(Math.max(0,5-cafe.price))}</span></div>
+      <div class="card-text t-state">${cafe.visited?"방문완료":"방문예정"}</div>
+      <div class="card-text t-menu">${escapeHTML(cafe.menu)}</div>
+      <div class="card-text t-stars">${rating}</div>
+      <div class="card-text t-review">${escapeHTML(cafe.review)}</div>
+    </div>
+    <div class="card-back"></div>`;
+  const img=el.querySelector(".card-photo");
+  img.draggable=false;
+  let idx=0;
+  img.onerror=()=>{
+    idx++;
+    if(idx<candidates.length)img.src=encodeURI(candidates[idx]);
+    else{img.remove();el.querySelector(".card-face").insertAdjacentHTML("afterbegin",'<div class="card-photo fallback">✦</div>')}
+  };
+  img.src=encodeURI(candidates[idx]);
+  if(interactive)el.addEventListener("click",()=>{if(el.dataset.dragged==="1")return;selectCard(el,cafe)});
+  return el;
+}
+function setCardPos(el,x,y,r){
+  el.style.setProperty("--x",`${x}px`);
+  el.style.setProperty("--y",`${y}px`);
+  el.style.setProperty("--r",`${r}deg`);
+}
+function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function cardSize(scope=$("cardStage")){
+  const cs=getComputedStyle(scope || document.documentElement);
+  const w=parseFloat(cs.getPropertyValue("--card-w"));
+  let h=parseFloat(cs.getPropertyValue("--card-h"));
+  if(!Number.isFinite(h))h=w*1050/720;
+  return {
+    w,
+    h
+  };
+}
+function buildNav(){
+  const list=$("catList"), drawCats=$("drawCats");
+  categories.forEach(cat=>{
+    const btn=document.createElement("button");
+    btn.className="cat-btn";
+    btn.style.setProperty("--cat-color",cat.theme);
+    btn.innerHTML=`<span>${escapeHTML(cat.label)}</span>`;
+    btn.addEventListener("click",()=>showCategory(cat.key));
+    list.appendChild(btn);
+    const d=document.createElement("button");
+    d.className="draw-cat";
+    d.style.setProperty("--draw-cat-color",cat.theme);
+    d.textContent=cat.label;
+    d.addEventListener("click",()=>startDraw(cat.key));
+    drawCats.appendChild(d);
+  });
+}
+function buildConveyor(){
+  const track=$("conveyorTrack");
+  track.innerHTML="";
+  [...state.cafes,...state.cafes].forEach(cafe=>{
+    const el=makeCard(cafe);
+    track.appendChild(el);
+  });
+}
+function setupConveyorControls(){
+  const track=$("conveyorTrack");
+  function setConveyorRate(rate){
+    const anim=track.getAnimations?.()[0];
+    if(anim && typeof anim.updatePlaybackRate==="function"){
+      anim.updatePlaybackRate(rate);
+      if(anim.playState==="idle")anim.play();
+    }
+  }
+  const stop=()=>{
+    track.classList.remove("fast","reverse","bump");
+    setConveyorRate(1);
+  };
+  function hold(reverse=false){
+    setConveyorRate(reverse?-3.2:3.2);
+  }
+  $("convPrev").addEventListener("pointerenter",()=>hold(true));
+  $("convNext").addEventListener("pointerenter",()=>hold(false));
+  ["pointerleave","pointercancel"].forEach(type=>{
+    $("convPrev").addEventListener(type,stop);
+    $("convNext").addEventListener(type,stop);
+  });
+}
+function initDeck(){
+  const stage=$("cardStage");
+  stage.innerHTML="";
+  state.category="all";
+  $("app").style.setProperty("--theme",THEMES.all);
+  document.querySelectorAll(".cat-btn").forEach((b,i)=>b.classList.toggle("active",categories[i].key==="all"));
+  const stack=shuffle(state.cafes).slice(0,18);
+  stack.forEach((cafe,i)=>{
+    const el=makeCard(cafe,{back:true,interactive:false});
+    el.style.left=`calc(50% - var(--card-w) / 2)`;
+    el.style.top=`calc(50% - var(--card-h) / 2)`;
+    setCardPos(el,(i-8)*.7,(i%5-2)*.4,(i-8)*1.2);
+    el.style.zIndex=i;
+    stage.appendChild(el);
+  });
+  const top=stage.lastElementChild;
+  if(top){
+    top.innerHTML='<div class="card-back"></div><div class="starter-label">click!</div>';
+    top.classList.add("is-back");
+    top.addEventListener("click",()=>showCategory("all"));
+  }
+}
+function showCategory(key){
+  const cat=categories.find(c=>c.key===key)||categories[0];
+  state.category=key;
+  $("app").style.setProperty("--theme",cat.theme);
+  document.querySelectorAll(".cat-btn").forEach((b,i)=>b.classList.toggle("active",categories[i].key===key));
+  const pool=shuffle(state.cafes.filter(cat.filter)).slice(0,24);
+  collapseThenDeal(pool);
+}
+function collapseThenDeal(pool){
+  if(!state.cards.length){dealCards(pool);return}
+  const stage=$("cardStage");
+  const {w,h}=cardSize(stage);
+  const cx=(stage.clientWidth-w)/2;
+  const cy=(stage.clientHeight-h)/2;
+  state.cards.forEach((card,i)=>{
+    card.el.style.transition=`transform .56s cubic-bezier(.4,0,.16,1) ${i*12}ms, opacity .28s ease`;
+    setCardPos(card.el,cx+(i-state.cards.length/2)*.5,cy+(i%5-2)*.35,(i-state.cards.length/2)*.7);
+  });
+  setTimeout(()=>dealCards(pool),720);
+}
+function dealCards(pool){
+  const stage=$("cardStage");
+  stage.innerHTML="";
+  clearHoverSpread();
+  if(!pool.length){stage.innerHTML='<div class="empty-note">이 카테고리에 해당하는 카페가 없어요.</div>';return}
+  const {w,h}=cardSize($("cardStage"));
+  state.cards=pool.map((cafe,i)=>{
+    const el=makeCard(cafe);
+    el.style.left="0";
+    el.style.top="0";
+    const pos=randomStagePos(i,pool.length);
+    el._home=pos;
+    setCardPos(el,($("cardStage").clientWidth-w)/2+(i-pool.length/2)*.7,($("cardStage").clientHeight-h)/2+(i%5-2)*.5,(i-pool.length/2)*1.1);
+    el.style.zIndex=i+1;
+    el.style.setProperty("--drift-dur",`${9+Math.random()*7}s`);
+    el.style.setProperty("--drift-delay",`${Math.random()*-9}s`);
+    el.style.setProperty("--drift-x1",`${(Math.random()-.5)*12}px`);
+    el.style.setProperty("--drift-y1",`${(Math.random()-.5)*10}px`);
+    el.style.setProperty("--drift-x2",`${(Math.random()-.5)*16}px`);
+    el.style.setProperty("--drift-y2",`${(Math.random()-.5)*12}px`);
+    el.style.setProperty("--drift-r1",`${(Math.random()-.5)*.8}deg`);
+    el.style.setProperty("--drift-r2",`${(Math.random()-.5)*.8}deg`);
+    stage.appendChild(el);
+    const item={el,cafe,x:pos.x,y:pos.y,r:pos.r,homeX:pos.x,homeY:pos.y,homeR:pos.r,spinSign:Math.random()<.5?-1:1};
+    setupDraggableCard(item);
+    return item;
+  });
+  requestAnimationFrame(()=>{
+    state.cards.forEach((card,i)=>{
+      card.el.style.transition=`transform .86s cubic-bezier(.18,.9,.16,1) ${i*24}ms, filter .2s ease, opacity .2s ease`;
+      setCardPos(card.el,card.x,card.y,card.r);
+    });
+  });
+  setTimeout(()=>state.cards.forEach(card=>{card.el.style.transition='transform .62s cubic-bezier(.2,.9,.18,1),filter .2s ease,opacity .2s ease'}),1150);
+}
+function randomStagePos(i,total){
+  const stage=$("cardStage").getBoundingClientRect();
+  const {w,h}=cardSize($("cardStage"));
+  const centerX=(stage.width-w)/2;
+  const centerY=(stage.height-h)/2;
+  const radiusX=Math.min(stage.width*.34,430);
+  const radiusY=Math.min(stage.height*.20,150);
+  const angle=Math.random()*Math.PI*2;
+  const dist=Math.sqrt(Math.random());
+  const x=centerX+Math.cos(angle)*radiusX*dist+(Math.random()-.5)*48;
+  const y=centerY+Math.sin(angle)*radiusY*dist+(Math.random()-.5)*38;
+  return {
+    x:Math.max(16,Math.min(stage.width-w-16,x)),
+    y:Math.max(16,Math.min(stage.height-h-16,y)),
+    r:(Math.random()-.5)*34
+  };
+}
+function nudgeCards(power=8,origin=null){
+  const {w,h}=cardSize($("cardStage"));
+  state.cards.forEach(card=>{
+    if(card===state.dragCard)return;
+    let dx=(Math.random()-.5)*2;
+    let dy=(Math.random()-.5)*2;
+    let spin=(Math.random()-.5)*.28*card.spinSign;
+    if(origin){
+      const cx=card.x+w/2;
+      const cy=card.y+h/2;
+      const vx=cx-origin.x;
+      const vy=cy-origin.y;
+      const dist=Math.max(36,Math.hypot(vx,vy));
+      const influence=Math.min(1,260/dist);
+      const swirl=state.dragging?power*influence:power*.42*influence;
+      dx=(vy/dist)*swirl + (vx/dist)*swirl*.18;
+      dy=(-vx/dist)*swirl + (vy/dist)*swirl*.12;
+      spin=card.spinSign*(Math.abs(dx-dy)*.12 + (state.dragging?influence*1.65:influence*.45));
+    }
+    card.x=Math.max(8,Math.min($("cardStage").clientWidth-w-8,card.x+dx));
+    card.y=Math.max(8,Math.min($("cardStage").clientHeight-h-8,card.y+dy));
+    card.r+=spin;
+    setCardPos(card.el,card.x,card.y,card.r);
+  });
+}
+function spreadCards(origin,selectedEl=null){
+  const {w,h}=cardSize($("cardStage"));
+  state.cards.forEach((card,i)=>{
+    if(card.el===selectedEl || card===state.dragCard){
+      card.el.style.zIndex=500;
+      return;
+    }
+    const baseX=card.homeX ?? card.x;
+    const baseY=card.homeY ?? card.y;
+    const cx=baseX+w/2;
+    const cy=baseY+h/2;
+    const vx=cx-origin.x;
+    const vy=cy-origin.y;
+    const dist=Math.max(48,Math.hypot(vx,vy));
+    const influence=Math.max(0,1-dist/660);
+    const push=260*influence;
+    card.x=Math.max(8,Math.min($("cardStage").clientWidth-w-8,baseX+(vx/dist)*push));
+    card.y=Math.max(8,Math.min($("cardStage").clientHeight-h-8,baseY+(vy/dist)*push));
+    card.r=(card.homeR ?? card.r)+card.spinSign*influence*(12+Math.abs(card.spinSign)*10);
+    card.el.style.zIndex=i+1;
+    setCardPos(card.el,card.x,card.y,card.r);
+  });
+}
+function clearHoverSpread(){
+  clearTimeout(state.hoverTimer);
+  state.hoverTimer=null;
+  state.hoverCard=null;
+}
+function cardItemFromEl(el){
+  return state.cards.find(card=>card.el===el);
+}
+function scheduleHoverSpread(el){
+  if(!el || state.dragCard || state.hoverCard===el)return;
+  clearHoverSpread();
+  state.hoverCard=el;
+  state.hoverTimer=setTimeout(()=>{
+    const item=cardItemFromEl(el);
+    if(!item || state.dragCard)return;
+    const stageRect=$("cardStage").getBoundingClientRect();
+    const cardRect=el.getBoundingClientRect();
+    spreadCards({
+      x:cardRect.left-stageRect.left+cardRect.width/2,
+      y:cardRect.top-stageRect.top+cardRect.height/2
+    },el);
+  },300);
+}
+function settleCards(){
+  state.cards.forEach((card,i)=>{
+    if(card===state.dragCard)return;
+    card.x=card.homeX ?? card.x;
+    card.y=card.homeY ?? card.y;
+    card.r=card.homeR ?? card.r;
+    card.el.style.zIndex=i+1;
+    setCardPos(card.el,card.x,card.y,card.r);
+  });
+}
+function setupDraggableCard(card){
+  card.el.addEventListener("pointerdown",e=>{
+    e.preventDefault();
+    clearHoverSpread();
+    state.dragging=true;
+    state.dragCard=card;
+    const rect=$("cardStage").getBoundingClientRect();
+    state.dragOffsetX=e.clientX-rect.left-card.x;
+    state.dragOffsetY=e.clientY-rect.top-card.y;
+    card.el.style.zIndex=300;
+    card.el.dataset.dragged="0";
+    card.el.style.transition="none";
+    card.el.classList.add("is-dragging");
+    card.el.setPointerCapture?.(e.pointerId);
+    document.body.classList.add("down");
+  });
+  card.el.addEventListener("pointermove",e=>{
+    if(state.dragCard!==card)return;
+    const rect=$("cardStage").getBoundingClientRect();
+    const {w,h}=cardSize($("cardStage"));
+    card.x=Math.max(8,Math.min($("cardStage").clientWidth-w-8,e.clientX-rect.left-state.dragOffsetX));
+    card.y=Math.max(8,Math.min($("cardStage").clientHeight-h-8,e.clientY-rect.top-state.dragOffsetY));
+    if(Math.abs(e.movementX||0)+Math.abs(e.movementY||0)>1)card.el.dataset.dragged="1";
+    card.r+=(e.movementX||0)*.08;
+    setCardPos(card.el,card.x,card.y,card.r);
+  });
+  card.el.addEventListener("pointerup",e=>{
+    if(state.dragCard!==card)return;
+    state.dragCard=null;
+    state.dragging=false;
+    card.homeX=card.x;
+    card.homeY=card.y;
+    card.homeR=card.r;
+    card.el.releasePointerCapture?.(e.pointerId);
+    card.el.classList.remove("is-dragging");
+    card.el.style.transition='transform .28s cubic-bezier(.2,.9,.22,1),filter .2s ease,opacity .2s ease';
+    document.body.classList.remove("down");
+    setTimeout(()=>{card.el.dataset.dragged="0"},80);
+  });
+}
+function selectCard(el,cafe){
+  el.classList.add("flipping");
+  setTimeout(()=>{
+    openZoom(cafe);
+    el.classList.remove("flipping");
+  },520);
+}
+function openZoom(cafe){
+  $("drawOverlay").classList.remove("open");
+  const theme=CARD_GLOWS[cafe.card_type]||CARD_GLOWS.other;
+  $("zoomOverlay").style.setProperty("--theme",theme);
+  const details=cafeDetails(cafe);
+  $("zoomShell").innerHTML=`
+    <div class="zoom-card">
+      <div class="zoom-hotspots">
+        ${hotspot("loc","left:8.5%;top:57.0%;width:27.5%;height:10.0%","지역",details.location)}
+        ${hotspot("price","left:36.6%;top:57.0%;width:26.9%;height:10.0%","가격대",details.price)}
+        ${hotspot("state","left:64.9%;top:57.0%;width:27.6%;height:10.0%","방문여부",details.visit)}
+        ${hotspot("menu","left:8.5%;top:68.5%;width:42.2%;height:9.2%","대표 메뉴",details.menu)}
+        ${hotspot("stars","left:51.9%;top:68.5%;width:40.6%;height:9.2%","별점",details.stars)}
+        ${hotspot("review","left:8.5%;top:79.5%;width:84%;height:9.5%","추천 상황",details.review)}
+      </div>
+    </div>`;
+  const card=makeCard(cafe,{interactive:false});
+  $("zoomShell").querySelector(".zoom-card").appendChild(card);
+  $("zoomOverlay").classList.add("open");
+  initKakaoMap(cafe);
+}
+function hotspot(cls,style,title,body){
+  return `<div class="hotspot ${cls}" style="${style}"><div class="hotspot-tip"><b>${title}</b>${body}</div></div>`;
+}
+function detailLines(value){
+  return String(value||"").split("|").map(v=>v.trim()).filter(Boolean).map(escapeHTML).join("<br>");
+}
+function formatWon(value){
+  const n=String(value||"").replace(/[^\d]/g,"");
+  return n?Number(n).toLocaleString("ko-KR")+"원":"";
+}
+function menuPriceLines(cafe){
+  const lines=[];
+  const first=formatWon(cafe.menu_price);
+  if(first)lines.push(`${escapeHTML((cafe.menu||"대표 메뉴").split(",")[0].trim())} · ${first}`);
+  if(cafe.menu2 && cafe.menu2_price)lines.push(`${escapeHTML(cafe.menu2)} · ${formatWon(cafe.menu2_price)}`);
+  if(cafe.menu3 && cafe.menu3_price)lines.push(`${escapeHTML(cafe.menu3)} · ${formatWon(cafe.menu3_price)}`);
+  return lines.join("<br>");
+}
+function starLine(label,value){
+  const n=parseInt(value,10);
+  if(!Number.isFinite(n))return "";
+  return `${label} ${"★".repeat(Math.max(0,Math.min(5,n)))}${"☆".repeat(Math.max(0,5-n))}`;
+}
+function valueOrDash(value){
+  const text=String(value||"").trim();
+  return text?escapeHTML(text):"정보 없음";
+}
+function cafeDetails(cafe){
+  const naver=cafe.naver_map||`https://map.naver.com/p/search/${encodeURIComponent(cafe.name+" "+cafe.location)}`;
+  const mapId=`kakao-map-${cafe.no}`;
+  const menuDetail=detailLines(cafe.detail_menu)||menuPriceLines(cafe)||cafe.menuItems.map(m=>`${escapeHTML(m.name)} · ${m.price}`).join("<br>");
+  const visitBits=[];
+  const visitCount=cafe.visit_count||cafe.visitCount||cafe["방문횟수"];
+  const visitCycle=cafe.visit_cycle||cafe.visitCycle||cafe["방문주기"];
+  const revisitReason=cafe.revisit_reason||cafe.revisitReason||cafe["재방문이유"];
+  if(cafe.visited){
+    const countText=String(visitCount||"").trim();
+    visitBits.push(`방문횟수. ${countText?escapeHTML(countText)+(countText.includes("회")?"":"회"):"정보 없음"}`);
+    visitBits.push(`방문주기. ${valueOrDash(visitCycle)}`);
+    visitBits.push(`재방문이유. ${valueOrDash(revisitReason)}`);
+  }else{
+    visitBits.push("방문 예정");
+  }
+  const starBits=[
+    starLine("맛 별점",cafe.taste_star),
+    starLine("분위기 별점",cafe.vibe_star),
+    starLine("접근성 별점",cafe.access_star),
+    starLine("가성비 별점",cafe.value_star)
+  ].filter(Boolean);
+  return {
+    location:detailLines(cafe.detail_location)||`${escapeHTML(cafe.nearby_station||cafe.location)}${cafe.walk_min?` · 도보 ${escapeHTML(cafe.walk_min)}`:""}<br><a href="${escapeHTML(naver)}" target="_blank" rel="noreferrer">지도 링크 열기</a><div class="hotspot-map" id="${mapId}"><div class="hotspot-map-fallback">지도 로딩 중</div></div>`,
+    price:detailLines(cafe.detail_price)||menuDetail,
+    visit:detailLines(cafe.detail_visit)||(visitBits.length?visitBits.join("<br>"):`${cafe.visited?"방문 완료":"방문 예정"}`),
+    menu:menuDetail,
+    stars:detailLines(cafe.detail_stars)||(starBits.length?starBits.join("<br>"):`취향 별점 ${"★".repeat(cafe.preference||0)}${"☆".repeat(Math.max(0,5-(cafe.preference||0)))}`),
+    review:detailLines(cafe.detail_review)||`${escapeHTML((cafe.rec_situation||"").split("|").filter(Boolean).join(" · ")||cafe.review)}`
+  };
+}
+function initKakaoMap(cafe){
+  const container=document.getElementById(`kakao-map-${cafe.no}`);
+  if(!container)return;
+  if(!window.kakao?.maps?.services){
+    container.innerHTML='<div class="hotspot-map-fallback">카카오맵 로드 실패<br>도메인 등록을 확인해주세요</div>';
+    return;
+  }
+  const keyword=`${cafe.name} ${cafe.location}`;
+  const ps=new kakao.maps.services.Places();
+  ps.keywordSearch(keyword,(data,status)=>{
+    if(status!==kakao.maps.services.Status.OK || !data.length){
+      container.innerHTML='<div class="hotspot-map-fallback">지도를 불러오지 못했어요</div>';
+      return;
+    }
+    const pos=new kakao.maps.LatLng(data[0].y,data[0].x);
+    container.innerHTML="";
+    const map=new kakao.maps.Map(container,{center:pos,level:4});
+    new kakao.maps.Marker({map,position:pos});
+  });
+}
+const cafeMapCache={};
+let minimapHideTimer=null;
+let minimapCafe=null;
+function validMapUrl(url){
+  return /^https?:\/\//.test(String(url||"").trim());
+}
+function cafeMapUrl(cafe){
+  return validMapUrl(cafe.naver_map)?cafe.naver_map:`https://map.naver.com/v5/search/${encodeURIComponent(cafe.name)}`;
+}
+function cafeKakaoUrl(cafe){
+  return cafeMapCache[cafe.no]?.kakaoUrl||`https://map.kakao.com/link/search/${encodeURIComponent(cafe.name)}`;
+}
+function placesSearch(keyword,options={}){
+  return new Promise(resolve=>{
+    if(!window.kakao?.maps?.services){resolve(null);return}
+    const ps=new kakao.maps.services.Places();
+    ps.keywordSearch(keyword,(data,status)=>{
+      resolve(status===kakao.maps.services.Status.OK && data.length ? data[0] : null);
+    },options);
+  });
+}
+async function searchCafeLocation(cafe){
+  if(cafeMapCache[cafe.no])return cafeMapCache[cafe.no];
+  if(!window.kakao?.maps?.services)return null;
+  const naverUrl=cafeMapUrl(cafe);
+  let place=await placesSearch(`${cafe.name} ${cafe.location}`);
+  if(!place){
+    place=await placesSearch(cafe.name,{
+      location:new kakao.maps.LatLng(37.566826,126.9786567),
+      radius:20000
+    });
+  }
+  if(!place)return null;
+  const result={
+    lat:parseFloat(place.y),
+    lng:parseFloat(place.x),
+    naverUrl,
+    kakaoUrl:place.place_url||`https://map.kakao.com/link/search/${encodeURIComponent(cafe.name)}`,
+    address:place.road_address_name||place.address_name||cafe.location
+  };
+  cafeMapCache[cafe.no]=result;
+  return result;
+}
+function positionMinimap(anchorEl){
+  const popup=$("minimapPopup");
+  const rect=anchorEl.getBoundingClientRect();
+  const gap=12;
+  const w=220;
+  const h=160;
+  let left=rect.left + rect.width/2 - w/2;
+  let top=rect.top - h - gap;
+  if(top<12)top=rect.bottom+gap;
+  left=Math.max(12,Math.min(window.innerWidth-w-12,left));
+  top=Math.max(12,Math.min(window.innerHeight-h-12,top));
+  popup.style.left=`${left}px`;
+  popup.style.top=`${top}px`;
+}
+async function showMinimap(cafe,anchorEl){
+  clearTimeout(minimapHideTimer);
+  minimapCafe=cafe;
+  const popup=$("minimapPopup");
+  const inner=$("minimapInner");
+  $("minimapLabel").textContent=cafe.name;
+  $("minimapOpenBtn").onclick=e=>{
+    e.stopPropagation();
+    window.open(cafeMapCache[cafe.no]?.naverUrl||cafeMapUrl(cafe),"_blank","noopener,noreferrer");
+  };
+  positionMinimap(anchorEl);
+  popup.classList.add("show");
+  if(!window.kakao?.maps?.services){
+    inner.innerHTML='<div class="minimap-fallback">카카오맵 로드 실패<br>도메인 등록을 확인해주세요</div>';
+    return;
+  }
+  inner.innerHTML='<div class="minimap-fallback">지도 로딩 중</div>';
+  const info=await searchCafeLocation(cafe);
+  if(minimapCafe!==cafe)return;
+  if(!info){
+    inner.innerHTML='<div class="minimap-fallback">위치를 찾을 수 없어요</div>';
+    return;
+  }
+  inner.innerHTML="";
+  const center=new kakao.maps.LatLng(info.lat,info.lng);
+  const map=new kakao.maps.Map(inner,{
+    center,
+    level:4,
+    draggable:false,
+    scrollwheel:false
+  });
+  new kakao.maps.Marker({map,position:center});
+}
+function hideMinimap(){
+  clearTimeout(minimapHideTimer);
+  minimapHideTimer=setTimeout(()=>$("minimapPopup").classList.remove("show"),250);
+}
+function setupMinimap(){
+  const popup=$("minimapPopup");
+  popup.addEventListener("mouseenter",()=>clearTimeout(minimapHideTimer));
+  popup.addEventListener("mouseleave",hideMinimap);
+  document.addEventListener("mouseover",e=>{
+    const anchor=e.target.closest?.("[data-cafe-no]");
+    if(!anchor)return;
+    const cafe=state.cafes.find(item=>String(item.no)===String(anchor.dataset.cafeNo));
+    if(cafe)showMinimap(cafe,anchor);
+  });
+  document.addEventListener("mouseout",e=>{
+    const anchor=e.target.closest?.("[data-cafe-no]");
+    if(!anchor)return;
+    if(e.relatedTarget && (anchor.contains(e.relatedTarget)||$("minimapPopup").contains(e.relatedTarget)))return;
+    hideMinimap();
+  });
+  document.addEventListener("click",e=>{
+    const nameEl=e.target.closest?.("[data-cafe-link-no]");
+    if(!nameEl)return;
+    e.preventDefault();
+    e.stopPropagation();
+    const cafe=state.cafes.find(item=>String(item.no)===String(nameEl.dataset.cafeLinkNo));
+    if(cafe)window.open(cafeKakaoUrl(cafe),"_blank","noopener,noreferrer");
+  },true);
+}
+function moodText(cafe){
+  const tags=cafe.tags.length?cafe.tags.join(" · "):"디저트";
+  return `${escapeHTML(tags)} 중심의 ${cafe.visited?"검증된":"가보고 싶은"} 카페. ${cafe.preference?`취향 점수 ${cafe.preference}/5.`:"사진과 메뉴가 궁금한 후보."}`;
+}
+function recommendText(cafe){
+  if(cafe.card_type==="legendary")return "방문 경험과 취향 점수가 높아서 먼저 뽑혀도 후회가 적은 카드예요.";
+  if(cafe.tags.includes("베이커리"))return "가볍게 포장하거나 산책 코스에 붙이기 좋은 후보로 보여요.";
+  if(cafe.tags.includes("커피"))return "디저트보다 커피 페어링을 같이 보고 싶을 때 좋은 선택이에요.";
+  return "메인 메뉴가 뚜렷해서 목적 있는 카페 투어 카드로 잘 어울려요.";
+}
+function closeZoom(){$("zoomOverlay").classList.remove("open")}
+function openDraw(){
+  $("drawOverlay").classList.add("open");
+  document.querySelector(".draw-panel").classList.add("choosing");
+  $("drawStage").innerHTML="";
+  $("drawSelected").textContent="";
+  $("drawHint").textContent="";
+  document.querySelectorAll(".draw-cat").forEach(b=>b.classList.remove("active"));
+}
+function startDraw(key){
+  const cat=categories.find(c=>c.key===key)||categories[0];
+  state.drawCategory=key;
+  document.querySelector(".draw-panel").classList.remove("choosing");
+  $("drawOverlay").style.setProperty("--theme",cat.theme);
+  $("drawSelected").textContent=cat.label;
+  document.querySelectorAll(".draw-cat").forEach((b,i)=>b.classList.toggle("active",categories[i].key===key));
+  $("drawHint").textContent="";
+  const pool=shuffle(state.cafes.filter(cat.filter)).slice(0,10);
+  const stage=$("drawStage");
+  stage.innerHTML="";
+  state.drawCards=pool.map((cafe,i)=>{
+    const el=makeCard(cafe,{back:true,interactive:false});
+    el.style.left="50%";
+    el.style.top="50%";
+    const {w,h}=cardSize($("drawStage"));
+    setCardPos(el,-w/2+(i-5)*.7,-h/2+(i%4)*.5,(i-5)*1.2);
+    el.style.zIndex=i+1;
+    stage.appendChild(el);
+    return {el,cafe};
+  });
+  let count=0;
+  const timer=setInterval(()=>{
+    const {w,h}=cardSize($("drawStage"));
+    state.drawCards.forEach(({el},i)=>setCardPos(el,-w/2+(Math.random()-.5)*54,-h/2+(Math.random()-.5)*30,(Math.random()-.5)*24));
+    count++;
+    if(count>=6){clearInterval(timer);fanDraw()}
+  },120);
+}
+function fanDraw(){
+  const n=state.drawCards.length;
+  const {w,h}=cardSize($("drawStage"));
+  const span=Math.min(900,(n-1)*82);
+  state.drawCards.forEach(({el,cafe},i)=>{
+    const norm=(i-(n-1)/2)/Math.max(1,(n-1)/2);
+    const x=norm*span*.5-w/2;
+    const y=-h/2+86-Math.pow(1-Math.abs(norm),2.35)*50;
+    const r=norm*7.5;
+    setCardPos(el,x,y,r);
+    el._draw={x,y,r};
+    el.style.zIndex=Math.round(100-Math.abs(norm)*40);
+    el.onclick=()=>{
+      el.classList.remove("is-back");
+      el.classList.add("flipping");
+      state.drawCards.forEach(c=>{if(c.el!==el)c.el.style.opacity=.18});
+      setTimeout(()=>openZoom(cafe),650);
+    };
+  });
+  $("drawHint").textContent="";
+}
+function closeDraw(){
+  $("drawOverlay").classList.remove("open");
+  document.querySelector(".draw-panel").classList.remove("choosing");
+}
+function setupMotion(){
+  const stage=$("cardStage");
+  stage.addEventListener("pointerdown",e=>{if(!e.target.closest('.cafe-card')){state.dragging=true;document.body.classList.add("down")}});
+  document.addEventListener("pointerup",()=>{if(!state.dragCard){state.dragging=false;document.body.classList.remove("down")}});
+  stage.addEventListener("pointerover",e=>{
+    const selected=e.target.closest('.cafe-card');
+    if(selected)scheduleHoverSpread(selected);
+  });
+  stage.addEventListener("pointerout",e=>{
+    if(!e.relatedTarget || !stage.contains(e.relatedTarget))return;
+    const next=e.relatedTarget.closest?.('.cafe-card');
+    if(next!==state.hoverCard)clearHoverSpread();
+  });
+  stage.addEventListener("pointerleave",()=>{clearHoverSpread();settleCards()},{passive:true});
+  $("shuffleCards").addEventListener("click",()=>{
+    clearHoverSpread();
+    showCategory(state.category || "all");
+  });
+}
+function setupCursor(){
+  const cursor=$("customCursor");
+  let last=0;
+  const move=e=>{
+    cursor.style.left=e.clientX+"px";
+    cursor.style.top=e.clientY+"px";
+    const now=performance.now();
+    if(now-last>55){last=now;spark(e.clientX,e.clientY)}
+  };
+  document.addEventListener("pointermove",move,{passive:true});
+  document.addEventListener("mousemove",move,{passive:true});
+  document.addEventListener("mousedown",()=>document.body.classList.add("down"));
+  document.addEventListener("mouseup",()=>document.body.classList.remove("down"));
+  document.addEventListener("mouseleave",()=>{cursor.style.left="-200px";cursor.style.top="-200px"});
+}
+function spark(x,y){
+  const s=document.createElement("i");
+  s.className="trail";
+  s.style.left=(x+4)+"px";
+  s.style.top=(y+4)+"px";
+  s.style.setProperty("--dx",`${(Math.random()-.5)*34}px`);
+  s.style.setProperty("--dy",`${(Math.random()-.5)*34}px`);
+  document.body.appendChild(s);
+  setTimeout(()=>s.remove(),760);
+}
+async function loadData(){
+  let text="";
+  try{
+    const res=await fetch(`cafes.csv?v=${Date.now()}`,{cache:"no-store"});
+    if(res.ok)text=await res.text();
+  }catch(e){}
+  if(!text)text=$("csvFallback").textContent.trim();
+  state.cafes=parseCSV(text);
+  window.cafes=state.cafes;
+  buildNav();
+  buildConveyor();
+  setupConveyorControls();
+  initDeck();
+  setupMotion();
+  setupCursor();
+  setupMinimap();
+  window.scrollTo(0,0);
+}
+["pointerdown","click"].forEach(type=>$("openDraw").addEventListener(type,e=>{
+  e.preventDefault();
+  e.stopPropagation();
+  openDraw();
+},{capture:true}));
+$("zoomClose").addEventListener("click",closeZoom);
+$("drawClose").addEventListener("click",closeDraw);
+$("zoomOverlay").addEventListener("click",e=>{if(e.target===$("zoomOverlay"))closeZoom()});
+$("drawOverlay").addEventListener("click",e=>{if(e.target===$("drawOverlay"))closeDraw()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeZoom();closeDraw()}});
+loadData();
+</script>
+</body>
+</html>
