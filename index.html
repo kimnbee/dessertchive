@@ -1221,7 +1221,7 @@ function valueOrDash(value){
   return text?escapeHTML(text):"정보 없음";
 }
 function cafeDetails(cafe){
-  const naver=cafe.naver_map||`https://map.naver.com/p/search/${encodeURIComponent(cafe.name+" "+cafe.location)}`;
+  const naver=`https://map.kakao.com/link/search/${encodeURIComponent(cafe.name)}`||`https://map.naver.com/p/search/${encodeURIComponent(cafe.name+" "+cafe.location)}`;
   const mapId=`kakao-map-${cafe.no}`;
   const menuDetail=detailLines(cafe.detail_menu)||menuPriceLines(cafe)||cafe.menuItems.map(m=>`${escapeHTML(m.name)} · ${m.price}`).join("<br>");
   const visitBits=[];
@@ -1278,7 +1278,7 @@ function validMapUrl(url){
   return /^https?:\/\//.test(String(url||"").trim());
 }
 function cafeMapUrl(cafe){
-  return validMapUrl(cafe.naver_map)?cafe.naver_map:`https://map.naver.com/v5/search/${encodeURIComponent(cafe.name)}`;
+  return validMapUrl(`https://map.kakao.com/link/search/${encodeURIComponent(cafe.name)}`)?`https://map.kakao.com/link/search/${encodeURIComponent(cafe.name)}`:`https://map.naver.com/v5/search/${encodeURIComponent(cafe.name)}`;
 }
 function cafeKakaoUrl(cafe){
   return cafeMapCache[cafe.no]?.kakaoUrl||`https://map.kakao.com/link/search/${encodeURIComponent(cafe.name)}`;
